@@ -1,0 +1,6 @@
+---
+applications:
+- name: adoptions
+  env:
+    BP_JAVA_VERSION: '21'
+    JBP_CONFIG_OPEN_JDK_JRE: "{ jre: { version: 21.+ }} "
