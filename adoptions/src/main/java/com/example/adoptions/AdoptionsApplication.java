@@ -35,8 +35,7 @@ import java.util.concurrent.Executors;
 @ResponseBody
 @SpringBootApplication
 public class AdoptionsApplication {
-
-
+    
     public static void main(String[] args) {
         SpringApplication.run(AdoptionsApplication.class, args);
     }
@@ -44,52 +43,6 @@ public class AdoptionsApplication {
     @Bean
     ChatClient chatClient(ChatClient.Builder builder) {
         return builder.build();
-    }
-
-    @Bean
-    ApplicationRunner runner(
-            ChatClient ai,
-            EmbeddingModel em,
-            OpenAiChatProperties openAiChatProperties,
-            DataSourceProperties dataSourceProperties,
-            Environment environment) {
-        return args -> {
-
-
-            System.out.println("===============");
-            var d = " /// ";
-
-            System.out.println(dataSourceProperties.determineUsername() + d +
-                    dataSourceProperties.determinePassword() + d +
-                    dataSourceProperties.determineUrl() + d +
-                    dataSourceProperties.determineDriverClassName());
-
-            System.out.println(openAiChatProperties.getCompletionsPath() + d +
-                    openAiChatProperties.getApiKey() + d +
-                    openAiChatProperties.getBaseUrl());
-
-            System.out.println(environment.getProperty("VCAP_SERVICES"));
-
-            System.out.println(environment.getProperty("VCAP_APPLICATION"));
-
-            System.out.println("===============");
-
-            var content = ai
-                    .prompt()
-                    .user("tell me a joke")
-                    .call()
-                    .content();
-            System.out.println("content: [" + content + "]");
-            System.out.println("===============");
-            var result = em.call(new EmbeddingRequest(List.of("hello, world"),
-                    null));
-
-            for (var r : result.getResults())
-                System.out.println("embedding result: [" + Arrays.toString(r.getOutput()) + "]");
-
-            System.out.println("===============");
-
-        };
     }
 
 }
