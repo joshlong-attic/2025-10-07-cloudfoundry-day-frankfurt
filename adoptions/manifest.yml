@@ -4,3 +4,9 @@ applications:
   env:
     BP_JAVA_VERSION: '21'
     JBP_CONFIG_OPEN_JDK_JRE: "{ jre: { version: 21.+ }} "
+  services:
+  - bootiful-genai
+  - bootiful-genai-embeddings
+  - bootiful-pgvector
+  routes:
+  - route: adoptions.apps.tas.vmtanzu.com
