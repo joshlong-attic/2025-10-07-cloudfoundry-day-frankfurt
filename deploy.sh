@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-ls -la pom.xml || echo "no pom.xml found" && exit 1
+function oops(){
+  echo "no $1 found" && exit 1
+}
+ls -la pom.xml || oops "pom.xml"
 ./mvnw -DskipTests clean package
-ls -al target || echo "no target directory found" && exit 1
+ls -al target || oops "target"
 cf push adoptions -p target/adoptions-0.0.1-SNAPSHOT.jar
 cf logs adoptions

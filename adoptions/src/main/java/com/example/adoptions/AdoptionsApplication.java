@@ -1,4 +1,4 @@
-package com.example.web;
+package com.example.adoptions;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor;
@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,15 +34,11 @@ import java.util.concurrent.Executors;
 @Controller
 @ResponseBody
 @SpringBootApplication
-public class WebApplication {
+public class AdoptionsApplication {
 
-    @GetMapping("/")
-    Map<String, Object> home() {
-        return Map.of("message", "hello CloudFoundry");
-    }
 
     public static void main(String[] args) {
-        SpringApplication.run(WebApplication.class, args);
+        SpringApplication.run(AdoptionsApplication.class, args);
     }
 
     @Bean
@@ -115,15 +112,19 @@ class SimpleAdoptionsController implements ApplicationRunner {
     private final Map<String, PromptChatMemoryAdvisor> memory = new ConcurrentHashMap<>();
 
     private final Runnable vectorizeRunnable;
+    private final DogRepository dogRepository;
 
-    SimpleAdoptionsController(ChatClient.Builder ai, DogRepository repository, VectorStore vectorStore) {
+    SimpleAdoptionsController(ChatClient.Builder ai, DogRepository repository, VectorStore vectorStore, DogRepository dogRepository) {
 
-        this.vectorizeRunnable = () -> repository.findAll().forEach(dog -> {
-            var dogument = new Document("id: %s, name: %s, description: %s".formatted(
-                    dog.id(), dog.name(), dog.description()
-            ));
-            vectorStore.add(List.of(dogument));
-        });
+        this.vectorizeRunnable = () -> {
+            repository.findAll().forEach(dog -> {
+                var dogument = new Document("id: %s, name: %s, description: %s".formatted(
+                        dog.id(), dog.name(), dog.description()
+                ));
+                vectorStore.add(List.of(dogument));
+            });
+            System.out.println("finished inserting doguments!");
+        };
 
         var system = """
                 You are an AI powered assistant to help people adopt a dog from the adoption\s
@@ -137,6 +138,12 @@ class SimpleAdoptionsController implements ApplicationRunner {
                 .defaultAdvisors(new QuestionAnswerAdvisor(vectorStore))
                 .defaultSystem(system)
                 .build();
+        this.dogRepository = dogRepository;
+    }
+
+    @GetMapping("/dogs")
+    Collection<Dog> all() {
+        return dogRepository.findAll();
     }
 
     @GetMapping("/{user}/inquire")
@@ -144,7 +151,7 @@ class SimpleAdoptionsController implements ApplicationRunner {
 
         var advisor = this.memory
                 .computeIfAbsent(user, u -> PromptChatMemoryAdvisor.builder(new InMemoryChatMemory())
-                .build());
+                        .build());
         return this.ai
                 .prompt()
                 .user(question)
