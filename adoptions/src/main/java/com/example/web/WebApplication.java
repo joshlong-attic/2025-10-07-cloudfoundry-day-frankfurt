@@ -1,7 +1,9 @@
 package com.example.web;
 
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.model.openai.autoconfigure.OpenAiChatProperties;
-import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,8 +14,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.sql.DataSource;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @ResponseBody
@@ -30,18 +34,53 @@ public class WebApplication {
     }
 
     @Bean
-    ApplicationRunner runner (
+    ChatClient chatClient(ChatClient.Builder builder) {
+        return builder.build();
+    }
+
+    @Bean
+    ApplicationRunner runner(
+            ChatClient ai,
+            EmbeddingModel em ,
             OpenAiChatProperties openAiChatProperties,
-            DataSourceProperties dataSourceProperties ,
+            DataSourceProperties dataSourceProperties,
             Environment environment) {
         return args -> {
+
+
             System.out.println("===============");
-            System.out.println(dataSourceProperties.determineUsername() + '/' + dataSourceProperties.determinePassword() + '/' + dataSourceProperties.determineUrl() + '/' +
+            var d = " /// ";
+
+            System.out.println(dataSourceProperties.determineUsername() + d +
+                    dataSourceProperties.determinePassword() + d +
+                    dataSourceProperties.determineUrl() + d +
                     dataSourceProperties.determineDriverClassName());
-            System.out.println(openAiChatProperties.getCompletionsPath() +'/' + openAiChatProperties.getApiKey() + '/'+
-                    openAiChatProperties.getBaseUrl() );
+
+            System.out.println(openAiChatProperties.getCompletionsPath() + d +
+                    openAiChatProperties.getApiKey() + d +
+                    openAiChatProperties.getBaseUrl());
+
             System.out.println(environment.getProperty("VCAP_SERVICES"));
+
             System.out.println(environment.getProperty("VCAP_APPLICATION"));
+
+            System.out.println("===============");
+
+            var content = ai
+                    .prompt()
+                    .user("tell me a joke")
+                    .call()
+                    .content();
+            System.out.println("content: [" + content + "]");
+            System.out.println("===============");
+            var result = em.call(new EmbeddingRequest(List.of("hello, world") ,
+                    null ));
+
+            for (var r  : result.getResults())
+                System.out.println("embedding result: [" + Arrays.toString(r.getOutput())+ "]");
+
+            System.out.println("===============");
+
         };
     }
 
