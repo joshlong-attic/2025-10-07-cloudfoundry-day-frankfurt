@@ -20,7 +20,7 @@ public class ServiceApplication {
     }
 
     @Bean
-    ToolCallbackProvider toolCallbackProvider(DogScheduler scheduler) {
+    MethodToolCallbackProvider toolCallbackProvider(DogScheduler scheduler) {
         return MethodToolCallbackProvider
                 .builder()
                 .toolObjects(scheduler)
