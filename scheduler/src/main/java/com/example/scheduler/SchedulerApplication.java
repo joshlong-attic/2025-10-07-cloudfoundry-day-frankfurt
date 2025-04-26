@@ -27,17 +27,18 @@ public class SchedulerApplication {
     }
 }
 
-
 @Component
 class DogAdoptionScheduler {
 
-    @Tool(description = "schedule an appointment to adopt or pickup a dog from a Pooch Palace location")
-    String instant(@ToolParam(description = "the id of the dog") int dogId,
-                   @ToolParam(description = "the name of the dog") String dogName) throws Exception {
-        System.out.println("Scheduling appointment for " + dogId + '/' + dogName + ".");
-        return Instant
+    @Tool(description = "schedule an appointmen to pickup or adopt a dog at a Pooch Palace location")
+    String schedule(
+            @ToolParam(description = "the id of the dog") int dogId,
+            @ToolParam(description = "the name of the dog") String dogName) {
+        var i = Instant
                 .now()
                 .plus(3, ChronoUnit.DAYS)
                 .toString();
+        System.out.println("scheduling " + dogId + " / " + dogName + " for pickup on " + i);
+        return i;
     }
 }
