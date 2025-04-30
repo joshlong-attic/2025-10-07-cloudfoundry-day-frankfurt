@@ -112,7 +112,8 @@ class AdoptionsAssistantController {
         this.delegates = chatClientMap;
         this.beanFactory = beanFactory;
         var system = """
-                You are a router. When a request comes in, inspect the request and determine which of the following categories best matches the nature of the request and then return  the category, and only the category, of the best match. Here is a description of each category and an explanation of why you might choose that category.
+                You are a router. When a request comes in, inspect the request and determine which of the following categories best matches the nature of the request and then return  
+                the category, and only the category, of the best match. Here is a description of each category and an explanation of why you might choose that category.
                 """;
         for (var beanName : chatClientMap.keySet()) {
             system += "\n\n" + beanName + ": " + descriptionForChatClient(beanName) + "\n\n";
