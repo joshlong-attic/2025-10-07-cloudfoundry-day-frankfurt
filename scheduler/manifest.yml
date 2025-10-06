@@ -6,4 +6,4 @@ applications:
       BP_JAVA_VERSION: '21'
       JBP_CONFIG_OPEN_JDK_JRE: "{ jre: { version: 21.+ }} "
     routes:
-      - route: adoptions-scheduler.apps.tas.vmtanzu.com
+      - route: adoptions-scheduler.apps.tas-ndc.kuhn-labs.com
