@@ -1,0 +1,10 @@
+---
+applications:
+  - name: ai-tool-chat
+    buildpacks:
+      - java_buildpack_offline
+    memory: 1G
+    instances: 1
+    path: target/cf-mcp-client-1.6.0.jar
+    env:
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 21.+ } }'

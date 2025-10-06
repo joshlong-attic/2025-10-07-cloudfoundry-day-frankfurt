@@ -1,0 +1,44 @@
+<div class="app-container" role="application" aria-label="Tanzu Platform Chat Application">
+  <header role="banner">
+    <mat-toolbar>
+      <h1 class="app-title">Tanzu Platform Chat</h1>
+      <span style="flex:1 1 auto"></span>
+    </mat-toolbar>
+  </header>
+
+  <!-- Navigation Rail for medium screens and up -->
+  <app-navigation-rail
+    class="md-hide-compact"
+    [metrics]="metrics()">
+  </app-navigation-rail>
+
+  <!-- Bottom Navigation for mobile -->
+  <app-bottom-navigation
+    class="md-show-compact"
+    [metrics]="metrics()">
+  </app-bottom-navigation>
+
+  <!-- Side panels as complementary content -->
+  <aside role="complementary" aria-label="Application panels">
+    <app-chat-panel
+      [metrics]="metrics()">
+    </app-chat-panel>
+    <app-document-panel
+      [metrics]="metrics()"
+      (documentIdsChanged)="onDocumentIdsChanged($event)">
+    </app-document-panel>
+    <app-mcp-servers-panel
+      [metrics]="metrics()">
+    </app-mcp-servers-panel>
+    <app-memory-panel
+      [metrics]="metrics()">
+    </app-memory-panel>
+  </aside>
+
+  <main role="main" aria-label="Chat conversation">
+    <app-chatbox
+      [metrics]="metrics()"
+      [documentIds]="currentDocumentIds()">
+    </app-chatbox>
+  </main>
+</div>

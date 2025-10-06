@@ -1,0 +1,767 @@
+/* Screen reader only utility class */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* CSS Variables for consistent theming */
+:host {
+  --reasoning-bg: var(--md-sys-color-reasoning-background);
+  --reasoning-border: var(--md-sys-color-primary);
+  --reasoning-text: var(--md-sys-color-on-surface);
+  --error-bg: var(--md-sys-color-error-background);
+  --error-border: var(--md-sys-color-error);
+  --error-text: var(--md-sys-color-on-surface);
+  --surface-elevation: var(--md-sys-color-surface-container-low);
+  /* Use Material Design motion system tokens */
+  --motion-easing: var(--md-sys-motion-easing-standard);
+  --motion-duration: var(--md-sys-motion-duration-medium);
+}
+
+/* Chat CSS using Material Design 3 Grid System */
+.chatbox {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: var(--md-spacing-16); /* Same as toolbar height */
+  padding: var(--md-layout-margin); /* Responsive padding */
+  width: min(90%, 1200px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+  gap: var(--md-spacing-2); /* 8px using Material spacing */
+  background-color: var(--md-sys-color-surface);
+}
+
+.chatbox-messages {
+  overflow-y: auto;
+  flex-grow: 1;
+  margin-bottom: var(--md-spacing-3); /* 12px using Material spacing */
+  padding: var(--md-spacing-4); /* Increased padding for better visual separation */
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--md-sys-color-outline-variant) transparent;
+  background-color: var(--md-sys-color-surface-dim);
+  border-radius: var(--md-spacing-3); /* 12px rounded corners */
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.chatbox-messages::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+
+.chatbox-messages::-webkit-scrollbar-thumb {
+  background: var(--md-sys-color-outline);
+  border-radius: 3px;
+  transition: background var(--motion-duration) var(--motion-easing);
+}
+
+.chatbox-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--md-sys-color-on-surface-variant);
+}
+
+.chat-message {
+  max-width: min(65%, 800px);
+  padding: var(--md-spacing-3); /* 12px using Material spacing */
+  margin-bottom: var(--md-spacing-4); /* 16px using Material spacing */
+  position: relative;
+  word-wrap: break-word;
+  /* Use Material Design slide-in animation */
+  animation: md-slide-in-from-bottom var(--md-sys-motion-duration-medium) var(--md-sys-motion-easing-emphasized-decelerate);
+}
+
+.chat-message.user {
+  margin-left: auto;
+  text-align: right;
+}
+
+.chat-message.user .user-message-content {
+  white-space: pre-line;
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  line-height: var(--md-sys-typescale-body-large-line-height);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.chat-message.bot {
+  margin-right: auto;
+  text-align: left;
+}
+
+/* ===== MATERIAL DESIGN 3 CHAT CARDS ===== */
+/* Implementation of MD3 Card specifications with proper variants, elevation, and state layers */
+.md3-chat-card {
+  position: relative;
+  overflow: visible;
+  transition: box-shadow var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+}
+
+/* User message cards - implement MD3 FILLED variant */
+.md3-chat-card[data-card-variant="user"] {
+  background-color: var(--md-sys-color-primary-container) !important;
+  border: none !important; /* Remove outlined border for filled variant */
+  box-shadow: none; /* Filled cards use 0dp elevation per MD3 spec */
+}
+
+/* Bot message cards - implement MD3 ELEVATED variant */
+.md3-chat-card[data-card-variant="bot"] {
+  background-color: var(--md-sys-color-surface-container-low) !important;
+  border: none !important; /* Remove outlined border for elevated variant */
+  /* MD3 1dp elevation using new elevation system */
+  box-shadow: var(--md-sys-elevation-1dp);
+}
+
+/* ===== MATERIAL DESIGN 3 STATE LAYERS ===== */
+/* Chat cards with proper Material Design 3 state layer implementation */
+
+/* Base state layer setup for chat cards */
+.md3-chat-card {
+  /* Inherit state layer base properties */
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.md3-chat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity var(--md-sys-state-transition-duration, var(--md-sys-motion-duration-short)) var(--md-sys-state-transition-easing, var(--md-sys-motion-easing-standard));
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* User message card state layers */
+.chat-message:hover .md3-chat-card[data-card-variant="user"]::before {
+  background-color: var(--md-sys-color-on-primary-container);
+  opacity: var(--md-sys-state-hover-opacity);
+}
+
+.chat-message .md3-chat-card[data-card-variant="user"]:focus-visible::before {
+  background-color: var(--md-sys-color-on-primary-container);
+  opacity: var(--md-sys-state-focus-opacity);
+}
+
+.chat-message .md3-chat-card[data-card-variant="user"]:active::before {
+  background-color: var(--md-sys-color-on-primary-container);
+  opacity: var(--md-sys-state-pressed-opacity);
+}
+
+/* Bot message card state layers */
+.chat-message:hover .md3-chat-card[data-card-variant="bot"]::before {
+  background-color: var(--md-sys-color-on-surface);
+  opacity: var(--md-sys-state-hover-opacity);
+}
+
+.chat-message .md3-chat-card[data-card-variant="bot"]:focus-visible::before {
+  background-color: var(--md-sys-color-on-surface);
+  opacity: var(--md-sys-state-focus-opacity);
+}
+
+.chat-message .md3-chat-card[data-card-variant="bot"]:active::before {
+  background-color: var(--md-sys-color-on-surface);
+  opacity: var(--md-sys-state-pressed-opacity);
+}
+
+/* Material Design 3 focus rings for accessibility */
+.md3-chat-card:focus-visible {
+  outline: var(--md-sys-state-focus-ring-width, 2px) solid var(--md-sys-color-outline);
+  outline-offset: var(--md-sys-state-focus-ring-offset, 2px);
+}
+
+/* Elevation changes on hover - elevated cards increase to 3dp per MD3 spec */
+.chat-message:hover .md3-chat-card[data-card-variant="bot"] {
+  /* MD3 3dp elevation using new elevation system */
+  box-shadow: var(--md-sys-elevation-3dp);
+}
+
+/* ===== MATERIAL DESIGN 3 CHAT INPUT AREA ===== */
+.chatbox-footer {
+  margin-bottom: var(--md-spacing-4); /* 16px using Material spacing */
+  padding: var(--md-spacing-4); /* Add padding for visual consistency */
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: var(--md-spacing-3); /* 12px rounded corners */
+  box-shadow: var(--md-sys-elevation-1dp);
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.chat-input-container {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--md-spacing-3); /* 12px Material spacing */
+  width: 100%;
+}
+
+.chat-input-field {
+  flex: 1;
+  min-width: 0; /* Prevent flex item from overflowing */
+}
+
+/* Material Design outlined form field styling */
+.chat-input-field .mat-mdc-form-field-wrapper {
+  padding-bottom: 0;
+}
+
+.chat-input-field .mat-mdc-form-field-subscript-wrapper {
+  font-size: var(--md-sys-typescale-body-small-font-size);
+  line-height: var(--md-sys-typescale-body-small-line-height);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Textarea styling for multiline input */
+.chat-input-field textarea {
+  resize: none;
+  font-family: var(--md-sys-typescale-font-family-plain);
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  line-height: var(--md-sys-typescale-body-large-line-height);
+  color: var(--md-sys-color-on-surface);
+}
+
+.chat-input-field textarea::placeholder {
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0.7;
+}
+
+/* Button styling */
+.prompt-button {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: var(--md-spacing-2); /* Align with input field */
+}
+
+.prompt-button mat-icon {
+  font-size: var(--md-sys-typescale-title-medium-font-size);
+  width: 24px;
+  height: 24px;
+}
+
+/* Material Design FAB styling */
+.send-fab {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  margin-top: var(--md-spacing-2); /* Align with input field */
+  box-shadow: var(--md-sys-elevation-3dp);
+  transition:
+    box-shadow var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-emphasized),
+    transform var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-emphasized);
+}
+
+.send-fab:hover:not(:disabled) {
+  box-shadow: var(--md-sys-elevation-4dp);
+  transform: scale(1.05);
+}
+
+.send-fab:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.send-fab mat-icon {
+  font-size: var(--md-sys-typescale-title-large-font-size);
+  width: 24px;
+  height: 24px;
+}
+
+/* Disabled states */
+.send-fab:disabled {
+  background-color: var(--md-sys-color-surface-variant) !important;
+  color: var(--md-sys-color-on-surface-variant) !important;
+  box-shadow: var(--md-sys-elevation-0dp) !important;
+  opacity: 0.6;
+}
+
+.prompt-button:disabled {
+  opacity: 0.5;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Focus and accessibility enhancements */
+.prompt-button:focus-visible {
+  outline: var(--md-sys-state-focus-ring-width, 2px) solid var(--md-sys-color-primary);
+  outline-offset: var(--md-sys-state-focus-ring-offset, 2px);
+}
+
+.send-fab:focus-visible {
+  outline: var(--md-sys-state-focus-ring-width, 2px) solid var(--md-sys-color-primary);
+  outline-offset: var(--md-sys-state-focus-ring-offset, 2px);
+}
+
+/* State layers for chat input buttons */
+.prompt-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.prompt-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.prompt-button:hover:not(:disabled)::before {
+  opacity: var(--md-sys-state-hover-opacity);
+}
+
+.prompt-button:focus-visible:not(:disabled)::before {
+  opacity: var(--md-sys-state-focus-opacity);
+}
+
+.prompt-button:active:not(:disabled)::before {
+  opacity: var(--md-sys-state-pressed-opacity);
+}
+
+/* Material Design loading rotation for prompt button when busy */
+.spinning {
+  animation: md-loading-rotation var(--md-sys-motion-duration-extra-long4) var(--md-sys-motion-easing-linear) infinite;
+}
+
+/* Disabled state styling */
+.chatbox-footer button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.chatbox-footer input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Smooth transitions for better UX */
+
+/* Button state layers using Material Design 3 system */
+button {
+  position: relative;
+  overflow: hidden;
+  transition:
+    opacity var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),
+    transform var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-emphasized);
+}
+
+button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity var(--md-sys-state-transition-duration) var(--md-sys-state-transition-easing);
+  pointer-events: none;
+  z-index: 1;
+}
+
+button:hover:not(:disabled)::before {
+  opacity: var(--md-sys-state-hover-opacity);
+}
+
+button:focus-visible:not(:disabled)::before {
+  opacity: var(--md-sys-state-focus-opacity);
+}
+
+button:focus-visible:not(:disabled) {
+  outline: var(--md-sys-state-focus-ring-width, 2px) solid var(--md-sys-color-outline);
+  outline-offset: var(--md-sys-state-focus-ring-offset, 2px);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+
+/* Bot message container */
+.bot-message-container {
+  position: relative;
+  width: 100%;
+}
+
+/* Material expansion panels for reasoning and error content */
+.reasoning-expansion-panel,
+.error-expansion-panel {
+  margin-top: var(--md-spacing-4); /* 16px using Material spacing */
+  box-shadow: none;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-spacing-3); /* 12px using Material spacing */
+  overflow: hidden;
+  background: var(--md-sys-color-surface-container-lowest);
+}
+
+.reasoning-expansion-panel {
+  border-left: var(--md-spacing-1) solid var(--md-sys-color-warning); /* 4px accent border */
+}
+
+.error-expansion-panel {
+  border-left: var(--md-spacing-1) solid var(--md-sys-color-error); /* 4px accent border */
+}
+
+/* Expansion panel headers */
+.reasoning-expansion-panel .mat-expansion-panel-header,
+.error-expansion-panel .mat-expansion-panel-header {
+  padding: var(--md-spacing-4); /* 16px using Material spacing */
+  background: var(--md-sys-color-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  transition: background-color var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+}
+
+.reasoning-expansion-panel .mat-expansion-panel-header:hover,
+.error-expansion-panel .mat-expansion-panel-header:hover {
+  background: var(--md-sys-color-surface-container-low);
+}
+
+/* Panel titles */
+.reasoning-expansion-panel .mat-panel-title,
+.error-expansion-panel .mat-panel-title {
+  display: flex;
+  align-items: center;
+  gap: var(--md-spacing-3); /* 12px using Material spacing */
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: var(--md-sys-typescale-label-large-font-weight);
+  color: var(--md-sys-color-on-surface);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.reasoning-icon {
+  color: var(--md-sys-color-warning);
+  font-size: var(--md-sys-typescale-headline-small-font-size);
+  width: 20px;
+  height: 20px;
+}
+
+.error-icon {
+  color: var(--md-sys-color-error);
+  font-size: var(--md-sys-typescale-headline-small-font-size);
+  width: 20px;
+  height: 20px;
+}
+
+.reasoning-title,
+.error-title {
+  margin: 0;
+}
+
+/* Content styling for expansion panels */
+.reasoning-content,
+.error-content {
+  padding: var(--md-spacing-4); /* 16px using Material spacing */
+  background: var(--md-sys-color-surface-container-lowest);
+  font-size: var(--md-sys-typescale-body-medium-font-size);
+  line-height: var(--md-sys-typescale-body-medium-line-height);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.reasoning-content markdown,
+.error-content markdown {
+  display: block;
+}
+
+/* Main content area */
+.main-content {
+  width: 100%;
+  padding-right: var(--md-spacing-3); /* 12px using Material spacing */
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  line-height: var(--md-sys-typescale-body-large-line-height);
+  color: var(--md-sys-color-on-surface);
+}
+
+.main-content markdown {
+  display: block;
+}
+
+.main-content markdown h1,
+.main-content markdown h2,
+.main-content markdown h3 {
+  color: var(--mat-sys-on-surface);
+  margin: 1.5em 0 0.5em;
+}
+
+.main-content markdown p {
+  margin-bottom: 1em;
+}
+
+.main-content markdown code,
+.reasoning-content markdown code {
+  background: var(--surface-elevation);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.9em;
+}
+
+.main-content markdown pre,
+.reasoning-content markdown pre {
+  background: var(--surface-elevation);
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+/* Error field styling */
+.error-field {
+  margin-bottom: var(--md-spacing-2); /* 8px using Material spacing */
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.error-field strong {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 500;
+}
+
+.error-stacktrace {
+  margin-top: var(--md-spacing-2); /* 8px using Material spacing */
+  padding: var(--md-spacing-3); /* 12px using Material spacing */
+  background: var(--md-sys-color-surface-variant);
+  border-radius: var(--md-spacing-2); /* 8px using Material spacing */
+  font-family: var(--md-sys-typescale-font-family-code);
+  font-size: var(--md-sys-typescale-body-small-font-size);
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--md-sys-color-on-surface-variant);
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+
+
+/* Material Design 3 Animations - replaced custom animations with standard patterns */
+/* Custom animations moved to _motion.scss for system-wide consistency */
+
+/* Enhanced loading animation for typing dots with Material Design timing */
+@keyframes md-loading-dots-enhanced {
+  0%, 80%, 100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :host {
+    --reasoning-bg: rgba(var(--mat-sys-primary-rgb), 0.08);
+    --error-bg: rgba(var(--mat-sys-error-rgb), 0.08);
+  }
+
+  .reasoning-expansion-panel,
+  .error-expansion-panel {
+    box-shadow: var(--md-sys-elevation-8dp);
+  }
+
+  .main-content markdown code,
+  .reasoning-content markdown code,
+  .main-content markdown pre,
+  .reasoning-content markdown pre {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Enhanced chatbox footer contrast */
+  .chatbox-footer {
+    background-color: var(--md-sys-color-surface-container-high) !important;
+    border-color: var(--md-sys-color-outline) !important;
+  }
+
+  /* Better hint text visibility */
+  .chat-input-field .mat-mdc-form-field-subscript-wrapper,
+  .chat-input-field mat-hint {
+    color: var(--md-sys-color-on-surface) !important;
+    opacity: 0.87 !important;
+  }
+
+  /* Enhanced form field label and input text - comprehensive targeting */
+  .chat-input-field .mat-mdc-form-field-label,
+  .chat-input-field .mat-mdc-floating-label,
+  .chat-input-field .mdc-floating-label,
+  .chat-input-field .mat-mdc-form-field-label-wrapper .mat-mdc-form-field-label,
+  .chat-input-field .mdc-text-field__input,
+  .chat-input-field .mdc-text-field__label,
+  .chat-input-field mat-label,
+  .chat-input-field label,
+  .chat-input-field textarea {
+    color: var(--md-sys-color-on-surface) !important;
+    opacity: 0.9 !important;
+  }
+
+  /* Force better visibility for all label elements */
+  .chat-input-field .mat-mdc-form-field .mat-mdc-form-field-label,
+  .chat-input-field .mat-mdc-form-field .mdc-floating-label {
+    color: var(--md-sys-color-on-surface) !important;
+    opacity: 0.85 !important;
+    font-weight: 400 !important;
+  }
+
+  /* When field has focus or value, use primary color for label */
+  .chat-input-field .mat-mdc-form-field.mat-focused .mat-mdc-form-field-label,
+  .chat-input-field .mat-mdc-form-field.mat-form-field-has-label .mat-mdc-floating-label,
+  .chat-input-field .mat-mdc-form-field.mat-focused .mdc-floating-label {
+    color: var(--md-sys-color-primary) !important;
+    opacity: 1 !important;
+  }
+
+  /* Better placeholder text visibility */
+  .chat-input-field textarea::placeholder {
+    color: var(--md-sys-color-on-surface-variant) !important;
+    opacity: 0.7 !important;
+  }
+
+  /* Enhanced button visibility in chatbox footer */
+  .prompt-button {
+    color: var(--md-sys-color-on-surface) !important;
+    background-color: var(--md-sys-color-surface-container) !important;
+  }
+
+  .prompt-button:disabled {
+    color: var(--md-sys-color-on-surface-variant) !important;
+    opacity: 0.5 !important;
+  }
+
+  /* Enhanced Send button visibility */
+  .chatbox-footer button[mat-flat-button] {
+    background-color: var(--md-sys-color-primary) !important;
+    color: var(--md-sys-color-on-primary) !important;
+    font-weight: 500 !important;
+  }
+
+  .chatbox-footer button[mat-flat-button]:disabled {
+    background-color: var(--md-sys-color-surface-variant) !important;
+    color: var(--md-sys-color-on-surface-variant) !important;
+    opacity: 0.5 !important;
+  }
+
+  /* Enhanced FAB send button */
+  .send-fab {
+    background-color: var(--md-sys-color-primary) !important;
+    color: var(--md-sys-color-on-primary) !important;
+  }
+
+  .send-fab:disabled {
+    background-color: var(--md-sys-color-surface-variant) !important;
+    color: var(--md-sys-color-on-surface-variant) !important;
+  }
+
+}
+
+/* Responsive Design using Material Design 3 breakpoints */
+@media (min-width: 1240px) {
+  .chatbox {
+    width: min(85%, 1200px);
+    padding: var(--md-spacing-6); /* 24px using Material spacing */
+  }
+  .chat-message {
+    max-width: min(70%, 900px);
+    padding: var(--md-spacing-4); /* 16px using Material spacing */
+  }
+  .main-content {
+    font-size: var(--md-sys-typescale-body-large-font-size);
+    line-height: var(--md-sys-typescale-body-large-line-height);
+  }
+  .reasoning-content,
+  .error-content {
+    font-size: var(--md-sys-typescale-body-medium-font-size);
+    line-height: var(--md-sys-typescale-body-medium-line-height);
+  }
+}
+
+@media (max-width: 599px) {
+  .chatbox {
+    width: 95%;
+    padding: var(--md-spacing-3); /* 12px using Material spacing */
+    top: var(--md-toolbar-height);
+    bottom: var(--md-bottom-nav-height);
+  }
+  .chat-message {
+    max-width: 90%;
+    padding: var(--md-spacing-3); /* 12px using Material spacing */
+  }
+  .main-content {
+    font-size: var(--md-sys-typescale-body-medium-font-size);
+    padding-right: var(--md-spacing-2); /* 8px using Material spacing */
+  }
+  .reasoning-expansion-panel .reasoning-content,
+  .error-expansion-panel .error-content {
+    padding: var(--md-spacing-3); /* 12px using Material spacing */
+    font-size: var(--md-sys-typescale-body-small-font-size);
+  }
+  .reasoning-icon,
+  .error-icon { font-size: var(--md-sys-typescale-body-large-font-size); width: 16px; height: 16px; }
+
+  /* Mobile chat input optimizations */
+  .chat-input-container {
+    gap: var(--md-spacing-2); /* Reduce gap on mobile */
+  }
+
+  .prompt-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .send-fab {
+    width: 48px;
+    height: 48px;
+  }
+
+  .send-fab mat-icon {
+    font-size: var(--md-sys-typescale-title-medium-font-size);
+    width: 20px;
+    height: 20px;
+  }
+
+  .chat-input-field textarea {
+    font-size: var(--md-sys-typescale-body-medium-font-size);
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  .reasoning-expansion-panel, .error-expansion-panel, .chat-message { animation: none; }
+}
+
+/* Typing Animation */
+.typing__dot {
+  float: left;
+  width: 8px;
+  height: 8px;
+  margin: 0 4px;
+  background: var(--mat-sys-on-surface-variant);
+  border-radius: 50%;
+  opacity: 0;
+  animation: md-loading-dots-enhanced var(--md-sys-motion-duration-extra-long2) var(--md-sys-motion-easing-emphasized) infinite;
+}
+
+/* Staggered animation delays using Material Design motion tokens */
+.typing__dot:nth-child(1) { animation-delay: 0s; }
+.typing__dot:nth-child(2) { animation-delay: var(--md-sys-motion-duration-short4); /* 200ms */ }
+.typing__dot:nth-child(3) { animation-delay: var(--md-sys-motion-duration-medium4); /* 400ms */ }
