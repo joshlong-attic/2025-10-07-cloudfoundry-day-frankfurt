@@ -9,14 +9,18 @@ import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,7 +29,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.sql.DataSource;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @SpringBootApplication
@@ -36,12 +40,22 @@ public class AssistantApplication {
     }
 
     @Bean
-    ApplicationRunner genAiEnvRunner  (Environment environment) {
+    ApplicationRunner vectorInitialization(VectorStore vectorStore, DogRepository repository) {
+        return args -> repository.findAll().forEach(dog -> {
+            var dogument = new Document("id: %s, name: %s, description: %s".formatted(
+                    dog.id(), dog.name(), dog.description()
+            ));
+            vectorStore.add(List.of(dogument));
+        });
+    }
+
+    @Bean
+    ApplicationRunner genAiEnvRunner(Environment environment) {
         return args -> {
-            var properties  = new ArrayList< String>() ;
+            var properties = new ArrayList<String>();
             properties.add("spring.ai.openai.chat.base-url");
-            properties.add ("spring.ai.openai.chat.api-key");
-            properties.add ("spring.ai.openai.chat.options.model");
+            properties.add("spring.ai.openai.chat.api-key");
+            properties.add("spring.ai.openai.chat.options.model");
             for (var property : properties)
                 System.out.println(property + " = " + environment.getProperty(property));
             System.out.println("Running with " + environment);
@@ -78,6 +92,12 @@ public class AssistantApplication {
                 .builder(mwa)
                 .build();
     }
+}
+
+interface DogRepository extends ListCrudRepository<Dog, Integer> {
+}
+
+record Dog(@Id int id, String name, String owner, String description) {
 }
 
 @Controller
